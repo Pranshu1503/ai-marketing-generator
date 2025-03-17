@@ -1,27 +1,18 @@
 # AI-Powered Marketing Copy Generator
-
-A Python tool that generates personalized ad copy using AI.
+Personal Project
+- A Python tool that generates personalized ad copy using Ollama and local LLMs (e.g., Llama3).
 
 ## Requirements
 - Python 3.8+
-- Libraries: `transformers`, `torch`, `streamlit` (optional for UI)
+- Ollama (install from ollama.com)
+- Libraries: `ollama`, `streamlit` (via pip)
 
 ## Installation
-1. Clone this repo or copy the code.
-2. Set up a virtual environment (optional):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Mac/Linux
-   venv\Scripts\activate     # Windows
-3. Install dependencies:
-    ```bash
-    pip install transformers torch streamlit
+1. Install Ollama: `curl -fsSL https://ollama.com/install.sh | sh`
+2. Pull a model: `ollama pull llama3`
+3. Set up Python env: `pip install -r requirements.txt`
 
 ## How to Run
-1. CLI Mode: python generator.py and follow the prompts.
-2. Web UI Mode: streamlit run generator.py and use the browser interface.
-
-## Features
-- Generates catchy headlines and descriptions.
-- Supports tones: Exciting, Professional, Casual.
-- Includes a Call-to-Action suggestion.
+- Start Ollama: `ollama serve`
+- CLI: `python generator.py`
+- Web UI: `streamlit run generator.py`

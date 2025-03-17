@@ -1,27 +1,43 @@
-from transformers import pipeline
+import ollama
 import streamlit as st
 
-# Initialize the generator
-generator = pipeline("text-generation", model="distilgpt2")
-
 def generate_ad_copy(brand_name, product_description, target_audience, tone="Exciting"):
+    # Structured prompt for Ollama
     tone_prompt = f"Use a {tone.lower()} tone"
     prompt = (
-        f"{tone_prompt}. Generate a catchy ad headline (max 10 words) and a 2-3 sentence marketing description "
-        f"for {brand_name}. Product: {product_description}. Target audience: {target_audience}. "
-        "Be creative, concise, and engaging."
+        f"{tone_prompt}. Write a catchy ad headline (max 10 words) followed by '||' "
+        f"and a 2-3 sentence marketing description for {brand_name}. "
+        f"Product: {product_description}. Target audience: {target_audience}. "
+        "Keep it concise, creative, and engaging."
     )
     
-    result = generator(prompt, max_length=150, num_return_sequences=1, temperature=0.9, truncation=True)
-    generated_text = result[0]["generated_text"].replace(prompt, "").strip()
-    lines = [line.strip() for line in generated_text.split(". ") if line.strip()]
+    # Generate text with Ollama
+    response = ollama.generate(model="llama3", prompt=prompt)
+    generated_text = response["response"].strip()
     
-    headline = lines[0][:10] if lines else f"{brand_name} Unleashes Greatness!"
-    headline = " ".join(headline.split()[:10])
+    # Split into headline and description
+    if "||" in generated_text:
+        headline, description = generated_text.split("||", 1)
+    else:
+        headline, description = generated_text, ""
     
-    description_lines = lines[1:4] if len(lines) > 1 else [f"Discover {brand_name}'s amazing product now!"]
-    description = ". ".join(description_lines[:3]) + "."
+    # Clean and limit headline
+    headline = headline.strip()
+    headline_words = headline.split()[:10]  # Max 10 words
+    headline = " ".join(headline_words) if headline_words else f"{brand_name} Shines Bright!"
     
+    # Clean and ensure complete description
+    description = description.strip()
+    sentences = [s.strip() for s in description.split(". ") if s.strip()]
+    if len(sentences) < 2 or not description:
+        description = (
+            f"Experience {brand_name}'s {product_description} like never before. "
+            f"Perfect for {target_audience}—join the revolution today."
+        )
+    else:
+        description = ". ".join(sentences[:3]) + "."
+    
+    # Tone-specific CTA
     cta = {
         "exciting": "Grab yours now and ignite your journey!",
         "professional": "Elevate your experience—contact us today.",
@@ -34,18 +50,21 @@ def generate_ad_copy(brand_name, product_description, target_audience, tone="Exc
 def main():
     st.title("AI Marketing Copy Generator")
     st.write("Enter details to generate creative ad copy!")
-    
-    brand = st.text_input("Brand Name", "FitLife")
-    product = st.text_area("Product/Service Description", "A smart fitness tracker with heart rate monitoring")
-    audience = st.text_input("Target Audience", "Fitness enthusiasts")
+
+    # Input fields
+    brand = st.text_input("Brand Name", "EcoPure")
+    product = st.text_area("Product/Service Description", "A reusable water bottle made from recycled materials")
+    audience = st.text_input("Target Audience", "Eco-conscious consumers")
     tone = st.selectbox("Tone", ["Exciting", "Professional", "Casual"], index=0)
-    
+
+    # Generate button
     if st.button("Generate Ad Copy"):
-        headline, description, cta = generate_ad_copy(brand, product, audience, tone)
-        st.subheader("Generated Ad Copy")
-        st.write(f"**Headline:** {headline}")
-        st.write(f"**Description:** {description}")
-        st.write(f"**Call-to-Action:** {cta}")
+        with st.spinner("Generating your ad copy..."):
+            headline, description, cta = generate_ad_copy(brand, product, audience, tone)
+            st.subheader("Generated Ad Copy")
+            st.write(f"**Headline:** {headline}")
+            st.write(f"**Description:** {description}")
+            st.write(f"**Call-to-Action:** {cta}")
 
 if __name__ == "__main__":
     main()
